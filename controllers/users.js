@@ -1,9 +1,8 @@
 const { User } = require("../models/User");
 
-
 async function getAll(req, res, next) {
   const allUsers = await User.find();
-  res.status(200).send(allUsers);
+  res.send(allUsers);
 }
 
 async function signup(req, res, next) {
@@ -18,11 +17,61 @@ async function signup(req, res, next) {
 
     const userId = await User.addUser(newUserWithoutRepeatedPwd, next);
     if (userId) {
-      res.ok(userId);
+      res.status(201).send(userId);
     }
   } catch (err) {
     next(err);
   }
 }
 
-module.exports = { getAll };
+async function login(req, res, next) {
+  try {
+    const { password, user } = req.body;
+    bcrypt.compare(password, user.password, (err, result) => {
+      if (err) {
+        next(err);
+      }
+      if (!result) {
+        next(err);
+      }
+      if (result) {
+        const token = jwt.sign(
+          { id: user.id, role: user.role },
+          process.env.JWT_SECRET,
+          { expiresIn: "1d" }
+        );
+        res.cookie("token", token, {
+          maxAge: 100000 * 20 * 60,
+          httpOnly: true,
+        });
+        res.send(user);
+      }
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+function logout(req, res, next) {
+  try {
+    res.clearCookie("token", { httpOnly: true });
+    res.send("Loged out succefully");
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function getVerifiedUser(req, res, next) {
+  const userId = req.userId;
+
+  try {
+    const user = await User.getUserById(userId, next);
+    res.send(user);
+  } catch (err) {
+    next(err);
+  }
+}
+
+
+
+module.exports = { getAll, signup, login, getVerifiedUser, logout };

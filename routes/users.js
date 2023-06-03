@@ -1,4 +1,5 @@
 const express = require('express');
+const { passworMatch, isNewUser, encryptPwd, doesUserExist, requireAdmin, auth} = require("../middlewares/userMiddlewares");
 const router = express.Router();
 
 const UsersController = require('../controllers/users');
@@ -7,12 +8,12 @@ const UsersController = require('../controllers/users');
 router.get("/", UsersController.getAll);
 
 // CREATE
-router.post('/signup', passworMatch, isNewUser, encryptPwd, UserControllers.signup);
+router.post('/signup', passworMatch, isNewUser, encryptPwd, UsersController.signup);
 
 //LOGIN
-router.post('/login', doesUserExist, UserControllers.login);
+router.post('/login', doesUserExist, UsersController.login);
 
 //LOGOUT
-router.get('/logout', auth, UserControllers.logout);
+router.get('/logout', auth, UsersController.logout);
 
 module.exports = router
