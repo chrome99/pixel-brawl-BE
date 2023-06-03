@@ -15,9 +15,9 @@ async function signup(req, res, next) {
       password
     };
 
-    const userId = await User.addUser(newUserWithoutRepeatedPwd, next);
-    if (userId) {
-      res.status(201).send(userId);
+    const user = await User.addUser(newUserWithoutRepeatedPwd, next);
+    if (user) {
+      res.status(201).send(user);
     }
   } catch (err) {
     next(err);
@@ -55,7 +55,7 @@ async function login(req, res, next) {
 function logout(req, res, next) {
   try {
     res.clearCookie("token", { httpOnly: true });
-    res.send("Loged out succefully");
+    res.send(true);
   } catch (err) {
     next(err);
   }

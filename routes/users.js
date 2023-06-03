@@ -16,4 +16,7 @@ router.post('/login', doesUserExist, UsersController.login);
 //LOGOUT
 router.get('/logout', auth, UsersController.logout);
 
+//verify user
+router.get('/verify', auth, UsersController.getVerifiedUser);
+
 module.exports = router
