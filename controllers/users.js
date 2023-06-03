@@ -72,6 +72,4 @@ async function getVerifiedUser(req, res, next) {
   }
 }
 
-
-
 module.exports = { getAll, signup, login, getVerifiedUser, logout };
