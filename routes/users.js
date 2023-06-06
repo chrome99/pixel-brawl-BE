@@ -1,5 +1,5 @@
 const express = require('express');
-const { passworMatch, isNewUser, encryptPwd, doesUserExist, requireAdmin, auth} = require("../middlewares/userMiddlewares");
+const { passworMatch, isNewUser, encryptPwd, doesUserExist, auth} = require("../middlewares/userMiddlewares");
 const router = express.Router();
 
 const UsersController = require('../controllers/users');
