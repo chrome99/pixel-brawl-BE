@@ -1,4 +1,5 @@
 const { User } = require("../models/User");
+const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
 async function getAll(req, res, next) {
@@ -19,7 +20,7 @@ async function signup(req, res, next) {
     const user = await User.addUser(newUserWithoutRepeatedPwd, next);
     if (user) {
       const token = jwt.sign(
-        { id: user.id, role: user.role },
+        { id: user._id, role: user.role },
         process.env.JWT_SECRET,
         { expiresIn: "1d" }
       );
@@ -48,12 +49,12 @@ async function login(req, res, next) {
       }
       if (result) {
         const token = jwt.sign(
-          { id: user.id, role: user.role },
+          { id: user._id, role: user.role },
           process.env.JWT_SECRET,
           { expiresIn: "1d" }
         );
         res.cookie("token", token, {
-          maxAge: 100000 * 20 * 60,
+          // maxAge: 100000 * 20 * 60,
           httpOnly: true,
         });
         res.send(user);

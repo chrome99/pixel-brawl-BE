@@ -2,98 +2,76 @@ const { User } = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-//  UserMiddlewares
-
-function passworMatch(req, res, next) {
-  const { password, rePassword } = req.body;
-  if (password !== rePassword) {
-    return res.status(400).send("passwords do not match");
-  }
-  next();
+async function getAll(req, res, next) {
+  const allUsers = await User.find();
+  res.send(allUsers);
 }
 
-async function isNewUser(req, res, next) {
-  const user = await User.getUserByEmail(req.body.email);
-  if (user) {
-    return res.status(400).send("user already exists");
-  }
-  next();
-}
-
-function encryptPwd(req, res, next) {
-  const saltRounds = 10;
-  bcrypt.hash(req.body.password, saltRounds, function (err, hash) {
-    if (err) {
-      res.status(500).send(err.message);
-    } else {
-      console.log(hash);
-      req.body.password = hash;
-      next();
-    }
-  });
-}
-
-async function doesUserExist(req, res, next) {
+async function signup(req, res, next) {
   try {
-    const user = await User.getUserByEmail(req.body.email);
-    if (!user) {
-      return res.status(400).send("user does not exist");
+    const { username, email, password } = req.body;
+
+    const newUserWithoutRepeatedPwd = {
+      username,
+      email,
+      password,
+    };
+
+    const user = await User.addUser(newUserWithoutRepeatedPwd, next);
+    if (user) {
+      res.status(201).send(user);
     }
-    req.body.user = user;
-    next();
   } catch (err) {
-    console.log(err);
-    res.status(500).send(err.message);
+    next(err);
   }
 }
 
-function requireAdmin(req, res, next) {
-  // Get the JWT token from the cookies
-  const token = req.cookies.token;
-  if (!token) {
-    // If the token is not present, the user is not authenticated
-    return next("User unauthorized");
-  }
-
-  // Verify the token
+async function login(req, res, next) {
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    if (decoded.role !== "admin") {
-      // If the user is not an admin, deny access
-      return res.status(403).send("Forbidden");
-    }
-    // If the user is an admin, proceed to the next middleware/route handler
-    next();
+    const { password, user } = req.body;
+    bcrypt.compare(password, user.password, (err, result) => {
+      if (err) {
+        next(err);
+      }
+      if (!result) {
+        next(err);
+      }
+      if (result) {
+        const token = jwt.sign(
+          { id: user.id, role: user.role },
+          process.env.JWT_SECRET,
+          { expiresIn: "1d" }
+        );
+        res.cookie("token", token, {
+          // maxAge: 100000 * 20 * 60,
+          httpOnly: true,
+        });
+        res.send(user);
+      }
+    });
   } catch (err) {
-    // If the token is invalid, deny access
-    return res.status(403).send("Forbidden");
+    next(err);
   }
 }
 
-function auth(req, res, next) {
-  if (!req.cookies.token) {
-    return next("User unauthorized");
+function logout(req, res, next) {
+  try {
+    res.clearCookie("token", { httpOnly: true });
+    res.send(true);
+  } catch (err) {
+    next(err);
   }
-
-  //get token from request cookies
-  const token = req.cookies.token;
-
-  //verify the token , decode the id
-  jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-    if (err) {
-      return next(err);
-    }
-    const userId = decoded.id;
-    req.userId = userId;
-    next();
-  });
 }
 
-module.exports = {
-  passworMatch,
-  isNewUser,
-  encryptPwd,
-  doesUserExist,
-  requireAdmin,
-  auth,
-};
+async function getVerifiedUser(req, res, next) {
+  const userId = req.userId;
+
+  try {
+    const user = await User.getUserById(userId, next);
+    res.send(user);
+  } catch (err) {
+    next(err);
+  }
+}
+
+module.exports = { getAll, signup, login, getVerifiedUser, logout };
