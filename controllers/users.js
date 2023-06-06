@@ -7,16 +7,25 @@ async function getAll(req, res, next) {
 
 async function signup(req, res, next) {
   try {
-    const { username , email, password } = req.body;
+    const { username, email, password } = req.body;
 
     const newUserWithoutRepeatedPwd = {
       username,
       email,
-      password
+      password,
     };
 
     const user = await User.addUser(newUserWithoutRepeatedPwd, next);
     if (user) {
+      const token = jwt.sign(
+        { id: user.id, role: user.role },
+        process.env.JWT_SECRET,
+        { expiresIn: "1d" }
+      );
+      res.cookie("token", token, {
+        maxAge: 100000 * 20 * 60,
+        httpOnly: true,
+      });
       res.status(201).send(user);
     }
   } catch (err) {

@@ -50,28 +50,10 @@ const socketServer = (io) => {
         socket.join(room);
      });
 
-    socket.on("position", (data) => {
-        const {position, room} = data
-      console.log("position: ", position?.top, position?.left);
-      io.to(room).emit("getPosition", position);
-    });
-
-    socket.on("velocity", (data) => {
-        const {velocity, room} = data
-      console.log("velocity: ", velocity.x, velocity.y);
-      io.to(room).emit("getVelocity", velocity);
-    });
-
-    socket.on("action", (data) => {
-        const {action, room} = data
-      console.log("action: ", action);
-      io.to(room).emit("getAction", action);
-    });
-
-    socket.on("direction", (data) => {
-        const {direction, room} = data
-      console.log("direction: ", direction);
-      io.to(room).emit("getAction", direction);
+    socket.on("player", (data) => {
+        const {player, room} = data
+      console.log("player: ", player);
+      socket.broadcast.emit("getPlayer", player);
     });
 
     // Socket.io disconnection event
