@@ -1,4 +1,6 @@
 const { User } = require("../models/User");
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 
 async function getAll(req, res, next) {
   const allUsers = await User.find();
@@ -7,12 +9,12 @@ async function getAll(req, res, next) {
 
 async function signup(req, res, next) {
   try {
-    const { username , email, password } = req.body;
+    const { username, email, password } = req.body;
 
     const newUserWithoutRepeatedPwd = {
       username,
       email,
-      password
+      password,
     };
 
     const user = await User.addUser(newUserWithoutRepeatedPwd, next);
@@ -41,7 +43,7 @@ async function login(req, res, next) {
           { expiresIn: "1d" }
         );
         res.cookie("token", token, {
-          maxAge: 100000 * 20 * 60,
+          // maxAge: 100000 * 20 * 60,
           httpOnly: true,
         });
         res.send(user);
