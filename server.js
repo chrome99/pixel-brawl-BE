@@ -1,16 +1,28 @@
 const express = require("express");
+const { createServer } = require('http')
+const { Server } = require("socket.io");
 const mongoose = require("mongoose");
-const cors = require("cors");
 require("dotenv").config();
+const cors = require("cors");
+const usersRoute = require("./routes/users");
+const socketServer = require("./sockets");
+
 const PORT = process.env.PORT || 8080;
 const URI = process.env.URI;
-const usersRoute = require("./routes/users");
 
 
 //Preperation
+
 const app = express();
+const httpServer = createServer(app);
+const io = new Server(httpServer, {  cors: {
+  origin: 'http://localhost:3000',
+  methods: ['GET', 'POST'],
+  credentials: true
+}});
+
 app.use(express.json());
-app.use(cors());
+app.use(cors({origin: 'http://localhost:3000', credentials: true}));
 
 //Routes
 app.use("/user", usersRoute);
@@ -32,7 +44,8 @@ main();
 async function main() {
   try {
     await mongoose.connect(URI, {dbName: "pixelDB"}).then(console.log("connected to db"));
-    const server = app.listen(PORT, () => {
+    socketServer(io); // Start Socket.io server
+      httpServer.listen(PORT, () => {
       console.log(`Listening on port ${PORT}...`);
     });
   } catch (err) {
