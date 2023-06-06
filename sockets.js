@@ -1,3 +1,5 @@
+const allPlayers = [];
+
 const socketServer = (io) => {
   // Array to store online user IDs
   let onlineUsers = [];
@@ -50,29 +52,41 @@ const socketServer = (io) => {
         socket.join(room);
      });
 
-    socket.on("position", (data) => {
-        const {position, room} = data
-      console.log("position: ", position?.top, position?.left);
-      io.to(room).emit("getPosition", position);
+    socket.on("getAllPlayers", (data) => {
+      const {player, room} = data
+      console.log("player: ", player);
+      console.log("room: ", room)
+      const findPlayer = allPlayers.indexOf((p) => p.id === player.id);
+      if (findPlayer === -1 && allPlayers.length < 2) {
+        player.num = allPlayers.length;
+        allPlayers.push(player);
+      }
+      else {
+        allPlayers[findPlayer] = player;
+      }
+      gameNamespace.to(room).emit("getAllPlayers", {players: allPlayers});
     });
 
-    socket.on("velocity", (data) => {
-        const {velocity, room} = data
-      console.log("velocity: ", velocity.x, velocity.y);
-      io.to(room).emit("getVelocity", velocity);
+    socket.on("updatedPlayer", (data) => {
+      const {player, room} = data
+      console.log("player: ", player);
+      console.log("room: ", room)
+      gameNamespace.to(room).emit("updatedPlayer", data);
     });
 
-    socket.on("action", (data) => {
-        const {action, room} = data
-      console.log("action: ", action);
-      io.to(room).emit("getAction", action);
-    });
+    // socket.on("removedPlayer", (data) => {
+    //   const {playerId, room} = data
+    //   const findPlayer = allPlayers.indexOf((p) => p.id === playerId);
+    //   allPlayers.splice(findPlayer, 1);
+    //   console.log("bla");
+    //   gameNamespace.to(room).emit("removedPlayer", data);
+    // });
 
-    socket.on("direction", (data) => {
-        const {direction, room} = data
-      console.log("direction: ", direction);
-      io.to(room).emit("getAction", direction);
-    });
+    // socket.on("player", (data) => {
+    //     const {player, room} = data
+    //   console.log("player: ", player);
+    //   socket.broadcast.emit("getPlayer", player);
+    // });
 
     // Socket.io disconnection event
     socket.on("disconnect", () => {
