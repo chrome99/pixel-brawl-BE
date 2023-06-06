@@ -1,4 +1,5 @@
 const { User } = require("../models/User");
+const jwt = require("jsonwebtoken");
 
 async function getAll(req, res, next) {
   const allUsers = await User.find();
@@ -32,6 +33,8 @@ async function signup(req, res, next) {
     next(err);
   }
 }
+
+
 
 async function login(req, res, next) {
   try {
