@@ -1,4 +1,5 @@
 const allPlayers = [];
+const allCol = {};
 
 const socketServer = (io) => {
   // Array to store online user IDs
@@ -54,14 +55,14 @@ const socketServer = (io) => {
 
     socket.on("getAllPlayers", (data) => {
       const {player, room} = data
-      console.log("player: ", player);
-      console.log("room: ", room)
+      // console.log("player: ", player);
+      // console.log("room: ", room)
       const findPlayer = allPlayers.indexOf((p) => p.id === player.id);
       if (findPlayer === -1 && allPlayers.length < 2) {
         player.num = allPlayers.length;
         allPlayers.push(player);
       }
-      else {
+      else if (findPlayer !== -1) {
         allPlayers[findPlayer] = player;
       }
       gameNamespace.to(room).emit("getAllPlayers", {players: allPlayers});
@@ -69,9 +70,30 @@ const socketServer = (io) => {
 
     socket.on("updatedPlayer", (data) => {
       const {player, room} = data
-      console.log("player: ", player);
-      console.log("room: ", room)
+      // console.log("player: ", player);
+      // console.log("room: ", room)
       gameNamespace.to(room).emit("updatedPlayer", data);
+    });
+
+    socket.on("takeDamage", (data) => {
+      const {statsId, damage, room} = data;
+      gameNamespace.to(room).emit("takeDamage", data);
+    });
+
+    socket.on("getAllCol", (data) => {
+      const {col, room} = data;
+      allCol[col.id] = col;
+      gameNamespace.to(room).emit("getAllCol", allCol);
+    });
+
+    socket.on("deleteCol", (data) => {
+      const {colId, room} = data;
+      gameNamespace.to(room).emit("deleteCol", colId);
+    });
+
+    socket.on("updateCol", (data) => {
+      const {colId, top, left, room} = data;
+      gameNamespace.to(room).emit("updateCol", data);
     });
 
     // socket.on("removedPlayer", (data) => {
