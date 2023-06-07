@@ -76,8 +76,19 @@ const socketServer = (io) => {
     });
 
     socket.on("takeDamage", (data) => {
+      console.log("takeDamage");
       const {statsId, damage, room} = data;
       gameNamespace.to(room).emit("takeDamage", data);
+    });
+
+    socket.on("addScore", (data) => {
+      const {playerId, room} = data;
+      gameNamespace.to(room).emit("addScore", playerId);
+    });
+
+    socket.on("matchWon", (data) => {
+      const {winnerName, room} = data;
+      gameNamespace.to(room).emit("matchWon", winnerName);
     });
 
     socket.on("getAllCol", (data) => {
