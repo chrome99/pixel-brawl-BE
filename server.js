@@ -7,6 +7,7 @@ const cors = require("cors");
 const socketServer = require("./sockets");
 const cookieParser = require("cookie-parser");
 const usersRoute = require("./routes/users");
+const scoresRoute = require("./routes/scores");
 
 const PORT = process.env.PORT || 8080;
 const URI = process.env.URI;
@@ -32,6 +33,7 @@ app.use((req, res, next) => {
   next();
 });
 app.use("/user", usersRoute);
+app.use("/score", scoresRoute);
 
 app.use("*", (req, res) =>
   res.status(404).json({ message: "Page not found." })

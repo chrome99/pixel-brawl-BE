@@ -2,7 +2,7 @@ const { Score } = require("../models/Score");
 
 async function getAllScores (req, res) {
   try {
-    const scores = await this.find();
+    const scores = await Score.find();
     res.status(200).send(scores);
   } catch (error) {
     res.status(500).send(error);
@@ -28,7 +28,7 @@ async function postScore (req, res) {
 async function getScoresByUser (req, res) {
   try {
     const { username } = req.query;
-    const user = await this.find({
+    const user = await Score.find({
       $or: [
         { player1: username },
         { player2: username }
