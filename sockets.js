@@ -116,7 +116,7 @@ const socketServer = (io) => {
     });
 
     socket.on("takeDamage", (data) => {
-      console.log("takeDamage");
+      // console.log("takeDamage");
       const {statsId, damage, room} = data;
       gameNamespace.to(room).emit("takeDamage", data);
     });
