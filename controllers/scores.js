@@ -13,10 +13,6 @@ async function postScore (req, res) {
   try {
     const {player1, player2, player1Score, player2Score} = req.body;
 
-    if (!(player1 && player2 && player1Score && player2Score)) {
-        return res.status(400).send("All input is required");
-    }
-
     const newScore = new Score(req.body);
     const savedScore = await newScore.save()
     res.status(200).send(savedScore);
