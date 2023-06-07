@@ -1,5 +1,6 @@
 const allPlayers = [];
 const allCol = {};
+let usersNum = 0;
 
 const socketServer = (io) => {
   // Array to store online user IDs
@@ -18,16 +19,29 @@ const socketServer = (io) => {
       }
       socket.userId = userId; // Set the userId as a property on the socket
     });
-    // Socket.io disconnection event
-    socket.on("disconnect", () => {
-      // Remove disconnected user from the onlineUsers array
-      console.log(`User ${socket.userId} disconnected.`);
-      const index = onlineUsers.indexOf(socket.userId);
-      if (index !== -1) {
-        onlineUsers.splice(index, 1);
-        adminNamespace.emit("onlineUsers", onlineUsers);
-      }
+    socket.on("getUserNum", (data) => {
+      const { id } = data;
+      userNamespace.emit("getUserNum", {id: id, num: usersNum});
+      usersNum++;
+      if (usersNum === 2) usersNum = 0;
     });
+    socket.on("updateRole", (data) => {
+      const { cardId, right } = data;
+      userNamespace.emit("updateRole", data);
+    });
+    socket.on("updateRoom", (data) => {
+      userNamespace.emit("updateRoom", data);
+    });
+    // Socket.io disconnection event
+    // socket.on("disconnect", () => {
+    //   // Remove disconnected user from the onlineUsers array
+    //   console.log(`User ${socket.userId} disconnected.`);
+    //   const index = onlineUsers.indexOf(socket.userId);
+    //   if (index !== -1) {
+    //     onlineUsers.splice(index, 1);
+    //     adminNamespace.emit("onlineUsers", onlineUsers);
+    //   }
+    // });
   });
 
   // Namespace for admin connections
@@ -59,7 +73,6 @@ const socketServer = (io) => {
       // console.log("room: ", room)
       const findPlayer = allPlayers.indexOf((p) => p.id === player.id);
       if (findPlayer === -1 && allPlayers.length < 2) {
-        player.num = allPlayers.length;
         allPlayers.push(player);
       }
       else if (findPlayer !== -1) {
