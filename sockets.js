@@ -1,6 +1,6 @@
-const allPlayers = [];
-const allCol = {};
-let usersNum = 0;
+let allUsers = {};
+let allPlayers = {};
+let allCol = {};
 
 const socketServer = (io) => {
   // Array to store online user IDs
@@ -19,18 +19,46 @@ const socketServer = (io) => {
       }
       socket.userId = userId; // Set the userId as a property on the socket
     });
-    socket.on("getUserNum", (data) => {
-      const { id } = data;
-      userNamespace.emit("getUserNum", {id: id, num: usersNum});
-      usersNum++;
-      if (usersNum === 2) usersNum = 0;
+    socket.on('joinMyRoom', (userId) => {
+      console.log(`Socket ${socket.id} joining personal room ${userId}`);
+      socket.join(userId);
+
+   });
+    socket.on('joinRoom', (data) => {
+      const {userId, username, room} = data;
+
+      //get number of clients in room
+      let clientNumber = 0;
+      const getRoom = userNamespace.adapter.rooms.get(room);
+      if (getRoom) {
+        const clientsArray = Array.from(getRoom);
+        clientNumber = clientsArray.length;
+      };
+
+      if (clientNumber === 0) {
+        allUsers[room] = {};
+      }
+
+      //if there is already 2 clients in this room, block entry
+      if (clientNumber < 2) {
+        console.log(`Socket ${socket.id} joining ${room}`);
+        socket.join(room);
+
+        allUsers[room][clientNumber] = username;
+
+        const dataToSend = {userId: userId, num: clientNumber, message: `${username} Joined room ${room}`};
+        userNamespace.to(room).emit("joinRoom", dataToSend);
+        if (clientNumber + 1 === 2) {
+          userNamespace.to(room).emit("allAboard", allUsers[room]);
+        }
+      }
+      else {
+        userNamespace.to(userId).emit("joinRoom", `Room ${room} is occupied with ${clientNumber} users`);
+      }
     });
     socket.on("updateRole", (data) => {
-      const { cardId, right } = data;
-      userNamespace.emit("updateRole", data);
-    });
-    socket.on("updateRoom", (data) => {
-      userNamespace.emit("updateRoom", data);
+      const { cardId, right, room } = data;
+      userNamespace.to(room).emit("updateRole", data);
     });
     // Socket.io disconnection event
     // socket.on("disconnect", () => {
@@ -71,14 +99,13 @@ const socketServer = (io) => {
       const {player, room} = data
       // console.log("player: ", player);
       // console.log("room: ", room)
-      const findPlayer = allPlayers.indexOf((p) => p.id === player.id);
-      if (findPlayer === -1 && allPlayers.length < 2) {
-        allPlayers.push(player);
+      if (allPlayers[room]) {
+        allPlayers[room][player.id] = player;
+      } else {
+        allPlayers[room] = {};
+        allPlayers[room][player.id] = player;
       }
-      else if (findPlayer !== -1) {
-        allPlayers[findPlayer] = player;
-      }
-      gameNamespace.to(room).emit("getAllPlayers", {players: allPlayers});
+      gameNamespace.to(room).emit("getAllPlayers", {players: allPlayers[room]});
     });
 
     socket.on("updatedPlayer", (data) => {
@@ -101,13 +128,20 @@ const socketServer = (io) => {
 
     socket.on("matchWon", (data) => {
       const {winnerName, room} = data;
+      allPlayers[room] = {};
+      allCol[room] = {};
       gameNamespace.to(room).emit("matchWon", winnerName);
     });
 
     socket.on("getAllCol", (data) => {
       const {col, room} = data;
-      allCol[col.id] = col;
-      gameNamespace.to(room).emit("getAllCol", allCol);
+      if (allCol[room]) {
+        allCol[room][col.id] = col;
+      } else {
+        allCol[room] = {};
+        allCol[room][col.id] = col;
+      }
+      gameNamespace.to(room).emit("getAllCol", allCol[room]);
     });
 
     socket.on("deleteCol", (data) => {
@@ -119,20 +153,6 @@ const socketServer = (io) => {
       const {colId, top, left, room} = data;
       gameNamespace.to(room).emit("updateCol", data);
     });
-
-    // socket.on("removedPlayer", (data) => {
-    //   const {playerId, room} = data
-    //   const findPlayer = allPlayers.indexOf((p) => p.id === playerId);
-    //   allPlayers.splice(findPlayer, 1);
-    //   console.log("bla");
-    //   gameNamespace.to(room).emit("removedPlayer", data);
-    // });
-
-    // socket.on("player", (data) => {
-    //     const {player, room} = data
-    //   console.log("player: ", player);
-    //   socket.broadcast.emit("getPlayer", player);
-    // });
 
     // Socket.io disconnection event
     socket.on("disconnect", () => {
