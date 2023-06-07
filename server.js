@@ -18,7 +18,7 @@ const app = express();
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: ['http://localhost:3000', 'https://pixel-brawl.netlify.app'],
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -26,7 +26,8 @@ const io = new Server(httpServer, {
 
 app.use(express.json());
 app.use(cookieParser());
-app.use(cors({ origin: "http://localhost:3000", credentials: true }));
+
+app.use(cors({ origin: ['http://localhost:3000', 'https://pixel-brawl.netlify.app'], credentials: true }));
 //Routes
 app.use((req, res, next) => {
   console.log(req.cookies.token);
