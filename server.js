@@ -4,9 +4,9 @@ const { Server } = require("socket.io");
 const mongoose = require("mongoose");
 require("dotenv").config();
 const cors = require("cors");
-const usersRoute = require("./routes/users");
 const socketServer = require("./sockets");
 const cookieParser = require("cookie-parser");
+const usersRoute = require("./routes/users");
 
 const PORT = process.env.PORT || 8080;
 const URI = process.env.URI;
